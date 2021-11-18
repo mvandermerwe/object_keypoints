@@ -1,7 +1,6 @@
 import numpy as np
 import os
 import binvox_rw.binvox_helpers as binvox_rw
-import object_keypoints.visualize as vis
 import trimesh
 from tqdm import tqdm
 

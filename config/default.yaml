@@ -26,3 +26,16 @@ data:
       in_key: point_cloud_2
       out_key: voxel_2
       voxel_size: 32
+method: object_model
+training:
+  out_dir: out/models/test
+  learning_rate: 0.0001
+  print_every: 10
+  epochs: 500
+  min_epochs: 100
+  max_epochs_without_improving: 10
+  batch_size: 32
+  val_batch_size: 32
+  shuffle: true
+  loss_weights:
+    reconstruction: 1.0

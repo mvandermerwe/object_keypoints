@@ -2,9 +2,10 @@ import os
 from torchvision import transforms
 
 import object_keypoints.data as data
+import object_keypoints.object_model as object_model
 
 method_dict = {
-
+    'object_model': object_model,
 }
 
 
