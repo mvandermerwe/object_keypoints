@@ -2,6 +2,7 @@ import numpy as np
 import os
 import binvox_rw.binvox_helpers as binvox_rw
 import object_keypoints.visualize as vis
+import trimesh
 from tqdm import tqdm
 
 
@@ -35,6 +36,19 @@ def downsample_voxel(voxels: np.ndarray, voxel_size: int):
     return new_voxel
 
 
+def vis_meshes():
+    """
+    Downsamples voxels and writes to file.
+    """
+    mug_dir = '/mnt/wwn-0x5000c500c71941f0-part1/ShapeNetCore.v2/03797390/'
+    mesh_folders = os.listdir(mug_dir)
+
+    for mesh_folder in tqdm(mesh_folders):
+        mesh_file = os.path.join(mug_dir, mesh_folder, 'models/model_normalized.obj')
+        mesh = trimesh.load(mesh_file)
+        mesh.show()
+
+
 def generate_downsampled_voxels():
     """
     Downsamples voxels and writes to file.
@@ -64,4 +78,5 @@ def generate_downsampled_voxels():
 
 
 if __name__ == '__main__':
-    generate_downsampled_voxels()
+    # generate_downsampled_voxels()
+    vis_meshes()

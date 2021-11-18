@@ -1,0 +1,16 @@
+data:
+  dataset: voxel
+  dataset_dir: out/dataset/mug
+  transforms:
+    - type: scale_pc
+      point_cloud_key: point_cloud
+    - type: tf_pc
+      point_cloud_key: tf_point_cloud
+    - type: pc_to_voxel
+      point_cloud_key: tf_point_cloud
+      voxel_key: tf_voxel
+      voxel_size: 32
+    - type: pc_to_voxel
+      point_cloud_key: point_cloud
+      voxel_key: voxel
+      voxel_size: 32
