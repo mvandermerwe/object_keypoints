@@ -20,14 +20,32 @@ def voxels_to_pc(voxels: np.ndarray):
     return pc
 
 
-def downsample_voxel(voxels: np.ndarray, voxel_size: int):
+def center_pc(pc: np.ndarray):
+    """
+    Center point cloud at the origin.
+    """
+    x_min = pc[:, 0].min()
+    x_max = pc[:, 0].max()
+    x_center = (x_max + x_min) / 2.0
+    y_min = pc[:, 1].min()
+    y_max = pc[:, 1].max()
+    y_center = (y_max + y_min) / 2.0
+    z_min = pc[:, 2].min()
+    z_max = pc[:, 2].max()
+    z_center = (z_max + z_min) / 2.0
+    pc[:, 0] -= x_center
+    pc[:, 1] -= y_center
+    pc[:, 2] -= z_center
+    return pc
+
+
+
+def pc_to_voxels(pc: np.ndarray, voxel_size: int):
     """
     Downsample to specified voxel size.
     """
-    pc = voxels_to_pc(voxels)
     voxel_length = 2.0 / voxel_size
-
-    voxel_locs = (pc / voxel_length).astype(int) + voxel_size // 2
+    voxel_locs = (pc / voxel_length).astype(int) + (voxel_size // 2)
 
     new_voxel = np.zeros([voxel_size, voxel_size, voxel_size], dtype=bool)
     for voxel_loc in voxel_locs:
@@ -66,11 +84,19 @@ def generate_downsampled_voxels():
         with open(vox_file, 'rb') as vf:
             voxels = binvox_rw.read_as_3d_array(vf)
 
+        mug_pc_large = center_pc(voxels_to_pc(voxels.data))
+        # pc_idcs = np.random.choice(mug_pc_large.shape[0], size=256)
+        # mug_pc_ds = mug_pc_large[pc_idcs]
+        # vis.visualize_points(mug_pc_ds, show=True)
+
         # Downsample to 64x64x64.
-        mug_voxels = downsample_voxel(voxels.data, 64)
+        mug_voxels = pc_to_voxels(mug_pc_large, 64)
 
         # To point cloud.
         mug_pc = voxels_to_pc(mug_voxels)
+        # vis.visualize_points(mug_pc, show=True)
+        #
+        # vis.visualize_voxels(mug_voxels)
 
         # Write point cloud.
         out_file = os.path.join(out_dir, mesh_folder + '.npy')
@@ -78,5 +104,5 @@ def generate_downsampled_voxels():
 
 
 if __name__ == '__main__':
-    # generate_downsampled_voxels()
-    vis_meshes()
+    generate_downsampled_voxels()
+    # vis_meshes()
