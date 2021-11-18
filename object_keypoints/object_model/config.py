@@ -1,10 +1,17 @@
 from object_keypoints.object_model.training import Trainer
+from object_keypoints.object_model.models.keypointnet import KeypointNet
 
 
 def get_model(cfg, device=None):
     model_cfg = cfg['model']
+    model_type = model_cfg['type']
 
-    return None
+    if model_type == "keypointnet":
+        model = KeypointNet(device=device)
+    else:
+        raise Exception("Unknown model type: %s" % model_type)
+
+    return model
 
 
 def get_trainer(model, optimizer, cfg, logger, vis_dir, device=None):

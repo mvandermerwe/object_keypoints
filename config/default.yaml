@@ -13,7 +13,7 @@ data:
     - type: pc_to_voxel
       in_key: point_cloud_1
       out_key: voxel_1
-      voxel_size: 32
+      voxel_size: 64
     - type: scale_pc
       in_key: point_cloud
       out_key: point_cloud_2
@@ -25,17 +25,21 @@ data:
     - type: pc_to_voxel
       in_key: point_cloud_2
       out_key: voxel_2
-      voxel_size: 32
+      voxel_size: 64
 method: object_model
 training:
   out_dir: out/models/test
   learning_rate: 0.0001
   print_every: 10
-  epochs: 500
-  min_epochs: 100
-  max_epochs_without_improving: 10
-  batch_size: 32
-  val_batch_size: 32
+  epochs: 1000
+  min_epochs: 400
+  max_epochs_without_improving: 40
+  batch_size: 4
+  val_batch_size: 4
   shuffle: true
   loss_weights:
     reconstruction: 1.0
+    separation: 1.0
+    consistency: 0.01
+model:
+  type: keypointnet

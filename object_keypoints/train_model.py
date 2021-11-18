@@ -52,7 +52,7 @@ def train_model(config_file: str, cuda_id: int = 0, no_cuda: bool = False, verbo
     print(model)
 
     # Setup datasets.
-    print('Loading train dataset:')
+    print('Loading train dataset...')
     train_dataset = config.get_dataset('train', cfg)
     print('Dataset size: %d' % len(train_dataset))
     train_dataloader = data.DataLoader(
@@ -62,7 +62,7 @@ def train_model(config_file: str, cuda_id: int = 0, no_cuda: bool = False, verbo
         num_workers=16,
         # pin_memory=True
     )
-    print('Loading val dataset:')
+    print('Loading val dataset...')
     validation_dataset = config.get_dataset('val', cfg)
     val_dataloader = data.DataLoader(validation_dataset, batch_size=cfg['training']['val_batch_size'], shuffle=True,
                                      num_workers=8)

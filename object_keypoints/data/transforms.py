@@ -21,12 +21,17 @@ class PointCloudToVoxel(object):
         voxel_length = 2.0 / self.voxel_size
         voxel_locs = (pc / voxel_length).astype(int) + (self.voxel_size // 2)
 
-        new_voxel = np.zeros([self.voxel_size, self.voxel_size, self.voxel_size], dtype=bool)
-        for voxel_loc in voxel_locs:
-            new_voxel[np.clip(voxel_loc[0], 0, self.voxel_size-1),
-                      np.clip(voxel_loc[1], 0, self.voxel_size-1),
-                      np.clip(voxel_loc[2], 0, self.voxel_size-1)] = True
-        new_data[self.out_key] = new_voxel
+        # new_voxel = np.zeros([self.voxel_size, self.voxel_size, self.voxel_size], dtype=bool)
+        # for voxel_loc in voxel_locs:
+        #     new_voxel[np.clip(voxel_loc[0], 0, self.voxel_size-1),
+        #               np.clip(voxel_loc[1], 0, self.voxel_size-1),
+        #               np.clip(voxel_loc[2], 0, self.voxel_size-1)] = True
+        # new_data[self.out_key] = new_voxel
+
+        new_voxel_2 = np.zeros([self.voxel_size, self.voxel_size, self.voxel_size], dtype=bool)
+        voxel_locs = np.clip(voxel_locs, a_min=0, a_max=self.voxel_size-1)
+        new_voxel_2[(voxel_locs[:, 0], voxel_locs[:, 1], voxel_locs[:, 2])] = True
+        new_data[self.out_key] = new_voxel_2
 
         return new_data
 
@@ -51,7 +56,7 @@ class RandomTransformPointCloud(object):
         pc = data[self.in_key]
         new_pc = rot @ pc.T
 
-        new_data[self.rot_key] = random_euler
+        new_data[self.rot_key] = rot
         new_data[self.out_key] = new_pc.T
         return new_data
 

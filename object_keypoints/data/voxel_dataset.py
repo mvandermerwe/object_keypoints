@@ -42,4 +42,14 @@ class VoxelDataset(torch.utils.data.Dataset):
         if self.transform is not None:
             data = self.transform(data)
 
-        return data
+        # TODO: Fix this.
+        fix_data = {
+            'voxel_1': data['voxel_1'].astype(np.float32),
+            'rot_1': data['rot_1'].astype(np.float32),
+            'scale_1': data['scale_1'].astype(np.float32),
+            'voxel_2': data['voxel_2'].astype(np.float32),
+            'rot_2': data['rot_2'].astype(np.float32),
+            'scale_2': data['scale_2'].astype(np.float32),
+        }
+
+        return fix_data
