@@ -49,7 +49,7 @@ def get_dataset(mode, cfg):
     transforms_ = get_transforms(cfg)
 
     if dataset_type == "voxel":
-        dataset = data.VoxelDataset(cfg['data']['dataset_dir'], transforms_)
+        dataset = data.VoxelDataset(cfg['data']['dataset_dir'], mode, transforms_)
     else:
         raise Exception("Unknown dataset type: %s." % dataset_type)
 
