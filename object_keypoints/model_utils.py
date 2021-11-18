@@ -1,7 +1,9 @@
+import mmint_utils
 import torch
 import os
 import sys
 import torch.nn as nn
+import object_keypoints.config as config
 
 
 def get_num_parameters(model: nn.Module):
@@ -33,3 +35,32 @@ def load_model(model_dict, model_file):
         load_dict = dict()
 
     return load_dict
+
+
+def load_model_and_dataset(model_config, dataset_config=None, dataset_mode="test", model_file='model_best.pt',
+                           cuda_id=0, no_cuda=False):
+    # Read in configuration files.
+    model_cfg = mmint_utils.load_cfg(model_config)
+
+    if dataset_config is not None:
+        dataset_cfg = mmint_utils.load_cfg(dataset_config)
+    else:
+        dataset_cfg = model_cfg
+
+    # Setup cuda.
+    is_cuda = (torch.cuda.is_available() and not no_cuda)
+    cuda_device = torch.device("cuda:%d" % cuda_id if is_cuda else "cpu")
+
+    # Create model:
+    model = config.get_model(model_cfg, device=cuda_device)
+
+    # Load model from file.
+    model_dict = {
+        'model': model,
+    }
+    model_file = os.path.join(model_cfg['training']['out_dir'], model_file)
+    _ = load_model(model_dict, model_file)
+
+    # Setup testing dataset.
+    test_dataset = config.get_dataset(dataset_mode, dataset_cfg)
+    return model_cfg, model, test_dataset, cuda_device
