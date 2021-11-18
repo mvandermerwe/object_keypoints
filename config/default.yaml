@@ -3,14 +3,26 @@ data:
   dataset_dir: out/dataset/mug
   transforms:
     - type: scale_pc
-      point_cloud_key: point_cloud
+      in_key: point_cloud
+      out_key: point_cloud_1
+      scale_key: scale_1
     - type: tf_pc
-      point_cloud_key: tf_point_cloud
+      in_key: point_cloud_1
+      out_key: point_cloud_1
+      rot_key: rot_1
     - type: pc_to_voxel
-      point_cloud_key: tf_point_cloud
-      voxel_key: tf_voxel
+      in_key: point_cloud_1
+      out_key: voxel_1
       voxel_size: 32
+    - type: scale_pc
+      in_key: point_cloud
+      out_key: point_cloud_2
+      scale_key: scale_2
+    - type: tf_pc
+      in_key: point_cloud_2
+      out_key: point_cloud_2
+      rot_key: rot_2
     - type: pc_to_voxel
-      point_cloud_key: point_cloud
-      voxel_key: voxel
+      in_key: point_cloud_2
+      out_key: voxel_2
       voxel_size: 32

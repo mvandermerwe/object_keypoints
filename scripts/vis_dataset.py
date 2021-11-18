@@ -22,8 +22,8 @@ if __name__ == '__main__':
     grid_spec = GridSpec(1, 2, figure=fig)
 
     ax_1 = fig.add_subplot(grid_spec[0, 0], projection='3d')
-    vis.visualize_voxels(data['voxel'], axes=ax_1, show=False)
+    vis.visualize_voxels(data['voxel_1'], axes=ax_1, show=False)
 
     ax_2 = fig.add_subplot(grid_spec[0, 1], projection='3d')
-    vis.visualize_voxels(data['tf_voxel'], axes=ax_2, show=False)
+    vis.visualize_voxels(data['voxel_2'], axes=ax_2, show=False)
     plt.show()

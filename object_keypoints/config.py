@@ -66,11 +66,11 @@ def get_transforms(cfg):
     for tf_info in transforms_info:
         tf_type = tf_info["type"]
         if tf_type == "pc_to_voxel":
-            tf = data.PointCloudToVoxel(tf_info['point_cloud_key'], tf_info['voxel_size'], tf_info['voxel_key'])
+            tf = data.PointCloudToVoxel(tf_info['in_key'], tf_info['out_key'], tf_info['voxel_size'])
         elif tf_type == "tf_pc":
-            tf = data.TransformPointCloud(tf_info['point_cloud_key'])
+            tf = data.RandomTransformPointCloud(tf_info['in_key'], tf_info['out_key'], tf_info['rot_key'])
         elif tf_type == "scale_pc":
-            tf = data.ScalePointCloud(tf_info['point_cloud_key'])
+            tf = data.ScalePointCloud(tf_info['in_key'], tf_info['out_key'], tf_info['scale_key'])
         else:
             raise Exception("Unknown transform type: %s" % tf_type)
         transform_list.append(tf)
