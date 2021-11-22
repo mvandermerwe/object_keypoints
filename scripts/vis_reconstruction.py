@@ -16,7 +16,7 @@ if __name__ == '__main__':
     model_cfg, model, dataset, device = load_model_and_dataset(args.config, dataset_mode=args.mode)
     model.eval()
 
-    dataloader = torch.utils.data.dataloader.DataLoader(dataset, batch_size=1, shuffle=False)
+    dataloader = torch.utils.data.dataloader.DataLoader(dataset, batch_size=1, shuffle=True)
 
     fig = plt.figure()
     grid_spec = GridSpec(1, 2, figure=fig)
