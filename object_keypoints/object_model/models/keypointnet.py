@@ -54,15 +54,32 @@ class KeypointNet(BaseObjectModel):
             nn.Conv3d(256, self.k, kernel_size=(3, 3, 3), padding='same')
         ).to(self.device)
 
+        # self.decoder = nn.Sequential(
+        #     nn.Conv3d(self.k, 128, (5, 5, 5), padding="same"),
+        #     nn.ReLU(),
+        #     nn.Conv3d(128, 256, (3, 3, 3), padding="same"),
+        #     nn.ReLU(),
+        #     # Up conv 1
+        #     nn.ConvTranspose3d(256, 256, (2, 2, 2), stride=(2, 2, 2)),
+        #     nn.ReLU(),
+        #     nn.Conv3d(256, 1, (3, 3, 3), padding="same")
+        # ).to(self.device)
+
         self.decoder = nn.Sequential(
-            nn.Conv3d(self.k, 128, (5, 5, 5), padding="same"),
-            nn.ReLU(),
-            nn.Conv3d(128, 256, (3, 3, 3), padding="same"),
-            nn.ReLU(),
             # Up conv 1
-            nn.ConvTranspose3d(256, 256, (2, 2, 2), stride=(2, 2, 2)),
+            nn.ConvTranspose3d(self.k, 128, (2, 2, 2), stride=(2, 2, 2)),
             nn.ReLU(),
-            nn.Conv3d(256, 1, (3, 3, 3), padding="same")
+            # Up conv 2
+            nn.ConvTranspose3d(128, 128, (2, 2, 2), stride=(2, 2, 2)),
+            nn.ReLU(),
+            # Up conv 3
+            nn.ConvTranspose3d(128, 64, (2, 2, 2), stride=(2, 2, 2)),
+            nn.ReLU(),
+            # Up conv 4
+            nn.ConvTranspose3d(64, 32, (2, 2, 2), stride=(2, 2, 2)),
+            nn.ReLU(),
+            # Up Conv 5
+            nn.Conv3d(32, 1, (3, 3, 3), padding="same")
         ).to(self.device)
 
     def heatmap_to_xyz(self, heatmap):
@@ -106,7 +123,11 @@ class KeypointNet(BaseObjectModel):
         return xyz, g_heatmap
 
     def forward(self, voxel, rot, scale):
-        xyz, g_heatmap = self.encode(voxel)
+        batch_size = voxel.shape[0]
+        # xyz, g_heatmap = self.encode(voxel)
+        xyz = torch.zeros([batch_size, self.k, 3], device=self.device)
+
+        g_heatmap = torch.zeros([batch_size, self.k, 4, 4, 4], device=self.device)
 
         recon_logits = self.decoder(g_heatmap).squeeze(1)
         recon = torch.sigmoid(recon_logits)

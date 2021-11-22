@@ -81,7 +81,7 @@ class Trainer(BaseTrainer):
     def compute_loss(self, data, it):
         voxel_1, rot_1, scale_1, voxel_2, rot_2, scale_2 = get_data_from_batch(data, device=self.device)
 
-        voxel_1_recon, voxel_1_recon_logits, voxel_2_recon, voxel_2_recon_logits, loss_dict = \
+        voxel_1_recon_logits, voxel_1_recon, voxel_2_recon_logits, voxel_2_recon, loss_dict = \
             self.model.loss_forward(voxel_1, rot_1, scale_1, voxel_2, rot_2, scale_2)
 
         # Calculate reconstruction losses.

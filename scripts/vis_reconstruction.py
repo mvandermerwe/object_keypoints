@@ -1,4 +1,5 @@
 import argparse
+import pdb
 
 import torch.utils.data.dataloader
 from matplotlib import pyplot as plt
@@ -18,17 +19,19 @@ if __name__ == '__main__':
 
     dataloader = torch.utils.data.dataloader.DataLoader(dataset, batch_size=1, shuffle=True)
 
-    fig = plt.figure()
-    grid_spec = GridSpec(1, 2, figure=fig)
-    ax_1 = fig.add_subplot(grid_spec[0, 0], projection='3d')
-    ax_2 = fig.add_subplot(grid_spec[0, 1], projection='3d')
-
     for batch in dataloader:
         voxel_1, rot_1, scale_1, voxel_2, rot_2, scale_2 = get_data_from_batch(batch, device)
 
         with torch.no_grad():
             _, _, voxel_1_recon = model.forward(voxel_1, rot_1, scale_1)
 
+        pdb.set_trace()
+        voxel_1_recon = voxel_1_recon > 0.15
+
+        fig = plt.figure()
+        grid_spec = GridSpec(1, 2, figure=fig)
+        ax_1 = fig.add_subplot(grid_spec[0, 0], projection='3d')
+        ax_2 = fig.add_subplot(grid_spec[0, 1], projection='3d')
         vis.visualize_voxels(voxel_1.cpu().numpy()[0], axes=ax_1, show=False)
         vis.visualize_voxels(voxel_1_recon.cpu().numpy()[0], axes=ax_2, show=False)
         plt.show()

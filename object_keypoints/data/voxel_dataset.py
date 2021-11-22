@@ -22,7 +22,7 @@ class VoxelDataset(torch.utils.data.Dataset):
         self.transform = transform
 
         # Load split info (i.e., which points in dataset are for training).
-        splits = load_split(os.path.join(self.dataset_dir, 'splits', split + '.txt'))
+        splits = load_split(os.path.join(self.dataset_dir, 'splits', 'train_recon.txt'))
 
         # Preload untransformed point clouds.
         self.point_clouds = []

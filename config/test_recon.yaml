@@ -11,7 +11,7 @@ data:
       out_key: point_cloud_1
       rot_key: rot_1
     - type: pc_to_voxel
-      in_key: point_cloud_1
+      in_key: point_cloud
       out_key: voxel_1
       voxel_size: 64
     - type: scale_pc
@@ -23,13 +23,13 @@ data:
       out_key: point_cloud_2
       rot_key: rot_2
     - type: pc_to_voxel
-      in_key: point_cloud_2
+      in_key: point_cloud
       out_key: voxel_2
       voxel_size: 64
 method: object_model
 training:
-  out_dir: out/models/kp_model_v2
-  learning_rate: 0.0001
+  out_dir: out/models/kp_model_test_recon
+  learning_rate: 0.001
   print_every: 10
   epochs: 1000
   min_epochs: 400
@@ -39,7 +39,7 @@ training:
   shuffle: true
   loss_weights:
     reconstruction: 1.0
-    separation: 0.1
-    consistency: 0.001
+    separation: 0.0
+    consistency: 0.0
 model:
   type: keypointnet

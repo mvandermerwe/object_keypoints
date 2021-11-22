@@ -15,7 +15,7 @@ class ShapeTester(ModelTester):
 
     def test_decoder_out_shape(self):
         batch_size = 1
-        heatmap_in = torch.rand([batch_size, self.model.k, 32, 32, 32], device=self.device)
+        heatmap_in = torch.rand([batch_size, self.model.k, 4, 4, 4], device=self.device)
 
         decoder_out = self.model.decoder(heatmap_in)
         print(decoder_out.shape)
