@@ -45,55 +45,24 @@ class KeypointNet(BaseObjectModel):
 
         # Build the network!
         self.encoder = nn.Sequential(
-            nn.Conv3d(1, 32, (3, 3, 3), padding="same"),
+            nn.Conv3d(1, 32, (5, 5, 5), padding="same"),
             nn.ReLU(),
-            nn.MaxPool3d((2, 2, 2)),
-            # Conv 1
-            nn.Conv3d(32, 64, (3, 3, 3), padding="same"),
+            nn.Conv3d(32, 128, kernel_size=(3, 3, 3), stride=(2, 2, 2), padding=1),
             nn.ReLU(),
-            nn.MaxPool3d((2, 2, 2)),
-            # Conv 2
-            nn.Conv3d(64, 128, (3, 3, 3), padding="same"),
+            nn.Conv3d(128, 256, kernel_size=(3, 3, 3), padding='same'),
             nn.ReLU(),
-            nn.MaxPool3d((2, 2, 2)),
-            # Conv 2
-            nn.Conv3d(128, 256, (3, 3, 3), padding="same"),
-            nn.ReLU(),
-            nn.MaxPool3d((2, 2, 2)),
-            # Up Conv 1
-            nn.ConvTranspose3d(256, 128, (5, 5, 5), (3, 3, 3), output_padding=(1, 1, 1)),
-            nn.ReLU(),
-            # Up Conv 2
-            nn.ConvTranspose3d(128, self.k, (4, 4, 4), (2, 2, 2)),
+            nn.Conv3d(256, self.k, kernel_size=(3, 3, 3), padding='same')
         ).to(self.device)
 
         self.decoder = nn.Sequential(
-            # Down Conv 1
-            nn.Conv3d(self.k, 128, (3, 3, 3), padding="same"),  # 32
-            nn.MaxPool3d((2, 2, 2)),
+            nn.Conv3d(self.k, 128, (5, 5, 5), padding="same"),
             nn.ReLU(),
-            # Down Conv 2
-            nn.Conv3d(128, 256, (3, 3, 3), padding="same"),  # 16
-            nn.MaxPool3d((2, 2, 2)),
-            nn.ReLU(),
-            # Down Conv 3
-            nn.Conv3d(256, 512, (3, 3, 3), padding="same"),  # 4
-            nn.MaxPool3d((2, 2, 2)),
+            nn.Conv3d(128, 256, (3, 3, 3), padding="same"),
             nn.ReLU(),
             # Up conv 1
-            nn.ConvTranspose3d(512, 256, (2, 2, 2), stride=(2, 2, 2)),
+            nn.ConvTranspose3d(256, 256, (2, 2, 2), stride=(2, 2, 2)),
             nn.ReLU(),
-            # Up conv 2
-            nn.ConvTranspose3d(256, 128, (2, 2, 2), stride=(2, 2, 2)),
-            nn.ReLU(),
-            # Up conv 3
-            nn.ConvTranspose3d(128, 64, (2, 2, 2), stride=(2, 2, 2)),
-            nn.ReLU(),
-            # Up conv 4
-            nn.ConvTranspose3d(64, 32, (2, 2, 2), stride=(2, 2, 2)),
-            nn.ReLU(),
-            # Up Conv 5
-            nn.Conv3d(32, 1, (3, 3, 3), padding="same")
+            nn.Conv3d(256, 1, (3, 3, 3), padding="same")
         ).to(self.device)
 
     def heatmap_to_xyz(self, heatmap):
