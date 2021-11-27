@@ -35,10 +35,10 @@ class KeypointNet(BaseObjectModel):
         self.k = k
 
         # Setup voxel location buffers.
-        r_y = torch.arange(0, self.heatmap_size, 1.0)
         r_x = torch.arange(0, self.heatmap_size, 1.0)
+        r_y = torch.arange(0, self.heatmap_size, 1.0)
         r_z = torch.arange(0, self.heatmap_size, 1.0)
-        ranz, rany, ranx = torch.meshgrid(r_z, r_y, r_x)
+        ranx, rany, ranz = torch.meshgrid(r_x, r_y, r_z)
         self.register_buffer("ranx", torch.FloatTensor(ranx).clone().to(self.device))
         self.register_buffer("rany", torch.FloatTensor(rany).clone().to(self.device))
         self.register_buffer("ranz", torch.FloatTensor(ranz).clone().to(self.device))
