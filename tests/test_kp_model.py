@@ -2,6 +2,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from model_tester import ModelTester
+import transforms3d as tf3d
 
 
 class KPModelTester(ModelTester):
@@ -54,3 +55,42 @@ class KPModelTester(ModelTester):
                             xyz_gt[kp_idx, 2] += z * heatmap[kp_idx, x, y, z].item()
             self.assertTrue(np.allclose(xyz.cpu().numpy(), xyz_gt))
 
+    #########################################
+    # Test Keypoint normalization           #
+    #########################################
+
+    def test_keypoint_normalization(self):
+        for i in range(5):
+            xyz = np.random.random([4, self.model.k, 3])
+            xyz_tf = np.zeros_like(xyz)
+            rots = []
+            scales = []
+
+            for b_idx in range(4):
+                keypoints = xyz[b_idx]
+
+                scale = 0.75 + (np.random.random(3) * 0.25)
+                scales.append(scale)
+
+                scale_keypoints = scale * keypoints
+
+                random_euler = -np.pi + (2.0 * np.pi * np.random.random(3))
+                rot = tf3d.euler.euler2mat(random_euler[0], random_euler[1], random_euler[2])
+                rots.append(rot)
+
+                rot_keypoints = (rot @ scale_keypoints.T).T
+
+                xyz_tf[b_idx] = rot_keypoints
+            rots = np.array(rots)
+            scales = np.array(scales)
+
+            # Move everything to torch.
+            xyz = torch.from_numpy(xyz).to(self.device)
+            xyz_tf = torch.from_numpy(xyz_tf).to(self.device)
+            rots = torch.from_numpy(rots).to(self.device)
+            scales = torch.from_numpy(scales).to(self.device)
+
+            # Normalize keypoints.
+            xyz_norm = self.model.normalize_keypoints(xyz_tf, rots, scales)
+
+            self.assertTrue(torch.allclose(xyz_norm, xyz))

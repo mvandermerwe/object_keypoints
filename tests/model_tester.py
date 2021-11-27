@@ -24,7 +24,7 @@ class ModelTester(unittest.TestCase):
         }
         self.model: KeypointNet = config.get_model(default_model_config, device=self.device)
 
-    def get_random_batch(self, batch_size=1):
+    def get_random_voxel_batch(self, batch_size=1):
         voxel_in = torch.rand([batch_size, 64, 64, 64], device=self.device)
         return voxel_in
 

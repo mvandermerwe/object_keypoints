@@ -8,7 +8,7 @@ from object_keypoints.data_generation.generate_voxels import voxels_to_pc
 class ShapeTester(ModelTester):
 
     def test_encoder_out_shape(self):
-        voxel_in = self.get_random_batch()
+        voxel_in = self.get_random_voxel_batch()
 
         encoder_out = self.model.encoder(voxel_in.unsqueeze(1))
         print(encoder_out.shape)
@@ -22,7 +22,7 @@ class ShapeTester(ModelTester):
 
     def test_gaussian_heatmap(self):
         batch_size = 1
-        voxel_in = self.get_random_batch(batch_size)
+        voxel_in = self.get_random_voxel_batch(batch_size)
 
         xyz, g_heatmap = self.model.encode(voxel_in)
 

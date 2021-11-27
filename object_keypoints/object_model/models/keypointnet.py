@@ -134,7 +134,6 @@ class KeypointNet(BaseObjectModel):
         return xyz, recon_logits, recon
 
     def normalize_keypoints(self, xyz: torch.Tensor, rotation: torch.Tensor, scale: torch.Tensor):
-        # TODO: Tests for this.
         rot_undo = torch.transpose(rotation, 1, 2)
         norm_xyz = (rot_undo @ xyz.transpose(1, 2)).transpose(1, 2)
         norm_xyz[:, :, 0] /= scale[:, None, 0]
