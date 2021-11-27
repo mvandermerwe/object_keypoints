@@ -82,17 +82,15 @@ class Trainer(BaseTrainer):
     def compute_loss(self, data, it):
         voxel_1, rot_1, scale_1, voxel_2, rot_2, scale_2 = get_data_from_batch(data, device=self.device)
 
-        voxel_1_recon_logits, voxel_1_recon, loss_dict = \
+        voxel_1_recon_logits, voxel_1_recon, voxel_2_recon_logits, voxel_2_recon, loss_dict = \
             self.model.loss_forward(voxel_1, rot_1, scale_1, voxel_2, rot_2, scale_2)
 
-        # vis.visualize_voxels(voxel_1.cpu().numpy()[0])
-
         # Calculate reconstruction losses.
-        recon_loss = F.binary_cross_entropy_with_logits(voxel_1_recon_logits, voxel_1, reduction='none').sum(
+        recon_loss_1 = F.binary_cross_entropy_with_logits(voxel_1_recon_logits, voxel_1, reduction='none').sum(
             dim=[1, 2, 3]).mean()
-        # recon_loss_2 = F.binary_cross_entropy_with_logits(voxel_2_recon_logits, voxel_2, reduction='none').sum(
-        #     dim=[1, 2, 3])
-        # recon_loss = torch.cat([recon_loss_1, recon_loss_2], dim=0).mean()
+        recon_loss_2 = F.binary_cross_entropy_with_logits(voxel_2_recon_logits, voxel_2, reduction='none').sum(
+            dim=[1, 2, 3])
+        recon_loss = torch.cat([recon_loss_1, recon_loss_2], dim=0).mean()
         loss_dict['reconstruction'] = recon_loss
 
         # Calculate final weighted loss.
