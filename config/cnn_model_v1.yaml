@@ -31,9 +31,9 @@ training:
   out_dir: out/models/cnn_model_v1
   learning_rate: 0.001
   print_every: 10
-  epochs: 5000
-  min_epochs: 500
-  max_epochs_without_improving: 50
+  epochs: 10000
+  min_epochs: 2000
+  max_epochs_without_improving: 100
   batch_size: 8
   val_batch_size: 8
   shuffle: true

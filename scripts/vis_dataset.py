@@ -10,11 +10,13 @@ from tqdm import tqdm
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("Visualize dataset.")
     parser.add_argument("config", type=str, help="Configuration file.")
+    parser.add_argument("--mode", "-m", type=str, default="train", help="Which mode to load/vis [train, val, test].")
     args = parser.parse_args()
 
     cfg = mmint_utils.load_cfg(args.config)
 
-    dataset = config.get_dataset("train", cfg)
+    dataset = config.get_dataset(args.mode, cfg)
+    print("Dataset length: %d" % len(dataset))
 
     fig = plt.figure()
     d_idx = np.random.randint(len(dataset))
