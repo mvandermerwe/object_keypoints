@@ -34,8 +34,8 @@ training:
   epochs: 5000
   min_epochs: 500
   max_epochs_without_improving: 50
-  batch_size: 4
-  val_batch_size: 4
+  batch_size: 8
+  val_batch_size: 8
   shuffle: true
   loss_weights:
     reconstruction: 1.0
