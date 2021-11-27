@@ -1,5 +1,6 @@
 from object_keypoints.object_model.training import Trainer
 from object_keypoints.object_model.models.keypointnet import KeypointNet
+from object_keypoints.object_model.models.cnn_net import CNNNet
 
 
 def get_model(cfg, device=None):
@@ -8,6 +9,8 @@ def get_model(cfg, device=None):
 
     if model_type == "keypointnet":
         model = KeypointNet(device=device)
+    elif model_type == "cnnnet":
+        model = CNNNet(device=device)
     else:
         raise Exception("Unknown model type: %s" % model_type)
 

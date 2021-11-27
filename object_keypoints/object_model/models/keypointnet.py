@@ -45,41 +45,40 @@ class KeypointNet(BaseObjectModel):
 
         # Build the network!
         self.encoder = nn.Sequential(
-            nn.Conv3d(1, 32, (5, 5, 5), padding="same"),
+            nn.Conv3d(1, 64, (5, 5, 5), padding="same"),
             nn.ReLU(),
-            nn.Conv3d(32, 128, kernel_size=(3, 3, 3), stride=(2, 2, 2), padding=1),
+
+            nn.Conv3d(64, 128, kernel_size=(3, 3, 3), stride=(2, 2, 2), padding=1),
             nn.ReLU(),
+
             nn.Conv3d(128, 256, kernel_size=(3, 3, 3), padding='same'),
             nn.ReLU(),
-            nn.Conv3d(256, self.k, kernel_size=(3, 3, 3), padding='same')
+
+            nn.Conv3d(256, 512, kernel_size=(3, 3, 3), padding='same'),
+            nn.ReLU(),
+
+            nn.Conv3d(512, self.k, kernel_size=(3, 3, 3), padding='same')
         ).to(self.device)
 
-        # self.decoder = nn.Sequential(
-        #     nn.Conv3d(self.k, 128, (5, 5, 5), padding="same"),
-        #     nn.ReLU(),
-        #     nn.Conv3d(128, 256, (3, 3, 3), padding="same"),
-        #     nn.ReLU(),
-        #     # Up conv 1
-        #     nn.ConvTranspose3d(256, 256, (2, 2, 2), stride=(2, 2, 2)),
-        #     nn.ReLU(),
-        #     nn.Conv3d(256, 1, (3, 3, 3), padding="same")
-        # ).to(self.device)
+        self.decoder_mlp = nn.Sequential(
+            nn.Linear(self.k * 3, 4 * 4 * 4 * 512),
+            nn.ReLU(),
+        ).to(self.device)
 
-        self.decoder = nn.Sequential(
-            # Up conv 1
-            nn.ConvTranspose3d(self.k, 128, (2, 2, 2), stride=(2, 2, 2)),
+        self.decoder_cnn = nn.Sequential(
+            nn.ConvTranspose3d(512, 256, (2, 2, 2), stride=(2, 2, 2)),
             nn.ReLU(),
-            # Up conv 2
-            nn.ConvTranspose3d(128, 128, (2, 2, 2), stride=(2, 2, 2)),
+
+            nn.ConvTranspose3d(256, 128, (2, 2, 2), stride=(2, 2, 2)),
             nn.ReLU(),
-            # Up conv 3
+
             nn.ConvTranspose3d(128, 64, (2, 2, 2), stride=(2, 2, 2)),
             nn.ReLU(),
-            # Up conv 4
+
             nn.ConvTranspose3d(64, 32, (2, 2, 2), stride=(2, 2, 2)),
             nn.ReLU(),
-            # Up Conv 5
-            nn.Conv3d(32, 1, (3, 3, 3), padding="same")
+
+            nn.Conv3d(32, 1, (2, 2, 2), padding='same'),
         ).to(self.device)
 
     def heatmap_to_xyz(self, heatmap):
@@ -117,19 +116,18 @@ class KeypointNet(BaseObjectModel):
         xyz = self.heatmap_to_xyz(heatmap)
         xyz = xyz.reshape(batch_size, self.k, 3)
 
-        # Get gaussian heatmap from xyz.
-        g_heatmap = self.xyz_to_heatmap(xyz)
-
-        return xyz, g_heatmap
+        return xyz
 
     def forward(self, voxel, rot, scale):
         batch_size = voxel.shape[0]
-        # xyz, g_heatmap = self.encode(voxel)
+        # xyz = self.encode(voxel)
         xyz = torch.zeros([batch_size, self.k, 3], device=self.device)
+        z = torch.ones([batch_size, self.k * 3], device=self.device)
 
-        g_heatmap = torch.zeros([batch_size, self.k, 4, 4, 4], device=self.device)
+        z_decode = self.decoder_mlp(z)
+        z_decode_rs = torch.reshape(z_decode, (batch_size, 512, 4, 4, 4))
+        recon_logits = self.decoder_cnn(z_decode_rs).squeeze(1)
 
-        recon_logits = self.decoder(g_heatmap).squeeze(1)
         recon = torch.sigmoid(recon_logits)
         return xyz, recon_logits, recon
 
@@ -147,18 +145,18 @@ class KeypointNet(BaseObjectModel):
 
         # Run model forward.
         xyz_1, v_1_recon_logits, v_1_recon = self.forward(voxel_1, rot_1, scale_1)
-        xyz_2, v_2_recon_logits, v_2_recon = self.forward(voxel_2, rot_2, scale_2)
+        # xyz_2, v_2_recon_logits, v_2_recon = self.forward(voxel_2, rot_2, scale_2)
+        #
+        # # Separation loss.
+        # sep_1 = separation_loss(xyz_1)
+        # sep_2 = separation_loss(xyz_2)
+        # sep_loss = torch.cat([sep_1, sep_2], dim=0).mean()
+        # loss_dict['separation'] = sep_loss
+        #
+        # # Keypoint consistency loss.
+        # norm_xyz_1 = self.normalize_keypoints(xyz_1, rot_1, scale_1)
+        # norm_xyz_2 = self.normalize_keypoints(xyz_2, rot_2, scale_2)
+        # consistency_loss = F.mse_loss(norm_xyz_1, norm_xyz_2)
+        # loss_dict['consistency'] = consistency_loss
 
-        # Separation loss.
-        sep_1 = separation_loss(xyz_1)
-        sep_2 = separation_loss(xyz_2)
-        sep_loss = torch.cat([sep_1, sep_2], dim=0).mean()
-        loss_dict['separation'] = sep_loss
-
-        # Keypoint consistency loss.
-        norm_xyz_1 = self.normalize_keypoints(xyz_1, rot_1, scale_1)
-        norm_xyz_2 = self.normalize_keypoints(xyz_2, rot_2, scale_2)
-        consistency_loss = F.mse_loss(norm_xyz_1, norm_xyz_2)
-        loss_dict['consistency'] = consistency_loss
-
-        return v_1_recon_logits, v_1_recon, v_2_recon_logits, v_2_recon, loss_dict
+        return v_1_recon_logits, v_1_recon, loss_dict  # , v_2_recon_logits, v_2_recon, loss_dict
