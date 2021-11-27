@@ -13,10 +13,6 @@ class PointCloudToVoxel(object):
         self.voxel_size = voxel_size
 
     def __call__(self, data):
-        new_data = {}
-        for key in data.keys():
-            new_data[key] = data[key]
-
         pc = data[self.in_key]
         voxel_length = 2.0 / self.voxel_size
         voxel_locs = (pc / voxel_length).astype(int) + (self.voxel_size // 2)
@@ -31,9 +27,9 @@ class PointCloudToVoxel(object):
         new_voxel_2 = np.zeros([self.voxel_size, self.voxel_size, self.voxel_size], dtype=bool)
         voxel_locs = np.clip(voxel_locs, a_min=0, a_max=self.voxel_size-1)
         new_voxel_2[(voxel_locs[:, 0], voxel_locs[:, 1], voxel_locs[:, 2])] = True
-        new_data[self.out_key] = new_voxel_2
+        data[self.out_key] = new_voxel_2
 
-        return new_data
+        return data
 
 
 class RandomTransformPointCloud(object):
@@ -44,10 +40,6 @@ class RandomTransformPointCloud(object):
         self.rot_key = rot_key
 
     def __call__(self, data):
-        new_data = {}
-        for key in data.keys():
-            new_data[key] = data[key]
-
         # Build random transform.
         random_euler = -np.pi + (2.0 * np.pi * np.random.random(3))
         rot = tf3d.euler.euler2mat(random_euler[0], random_euler[1], random_euler[2])
@@ -56,9 +48,9 @@ class RandomTransformPointCloud(object):
         pc = data[self.in_key]
         new_pc = rot @ pc.T
 
-        new_data[self.rot_key] = rot
-        new_data[self.out_key] = new_pc.T
-        return new_data
+        data[self.rot_key] = rot
+        data[self.out_key] = new_pc.T
+        return data
 
 
 class ScalePointCloud(object):
@@ -69,10 +61,6 @@ class ScalePointCloud(object):
         self.scale_key = scale_key
 
     def __call__(self, data):
-        new_data = {}
-        for key in data.keys():
-            new_data[key] = data[key]
-
         # Get random scale.
         scale = 0.75 + (np.random.random(3) * 0.25)
 
@@ -80,6 +68,6 @@ class ScalePointCloud(object):
         pc = data[self.in_key]
         new_pc = scale * pc
 
-        new_data[self.scale_key] = scale
-        new_data[self.out_key] = new_pc
-        return new_data
+        data[self.scale_key] = scale
+        data[self.out_key] = new_pc
+        return data
