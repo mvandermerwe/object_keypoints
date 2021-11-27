@@ -31,9 +31,9 @@ training:
   out_dir: out/models/kp_model_v1
   learning_rate: 0.001
   print_every: 10
-  epochs: 1000
-  min_epochs: 100
-  max_epochs_without_improving: 40
+  epochs: 5000
+  min_epochs: 500
+  max_epochs_without_improving: 50
   batch_size: 4
   val_batch_size: 4
   shuffle: true
