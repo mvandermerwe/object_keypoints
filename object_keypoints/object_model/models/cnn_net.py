@@ -74,7 +74,7 @@ class CNNNet(BaseObjectModel):
     def loss_forward(self, voxel_1, rot_1, scale_1, voxel_2, rot_2, scale_2):
         loss_dict = {}
 
-        v_1_recon_logits, v_1_recon = self.forward(voxel_1, rot_1, scale_1)
-        # v_2_recon_logits, v_2_recon = self.forward(voxel_2, rot_2, scale_2)
+        z_1, v_1_recon_logits, v_1_recon = self.forward(voxel_1, rot_1, scale_1)
+        z_2, v_2_recon_logits, v_2_recon = self.forward(voxel_2, rot_2, scale_2)
 
-        return v_1_recon_logits, v_1_recon, loss_dict
+        return v_1_recon_logits, v_1_recon, v_2_recon_logits, v_2_recon, loss_dict

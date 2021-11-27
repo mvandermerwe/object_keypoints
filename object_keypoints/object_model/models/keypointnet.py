@@ -120,15 +120,17 @@ class KeypointNet(BaseObjectModel):
 
     def forward(self, voxel, rot, scale):
         batch_size = voxel.shape[0]
-        # xyz = self.encode(voxel)
-        xyz = torch.zeros([batch_size, self.k, 3], device=self.device)
-        z = torch.ones([batch_size, self.k * 3], device=self.device)
 
+        # Encode
+        xyz = self.encode(voxel)
+        z = torch.reshape(xyz, (batch_size, self.k * 3))
+
+        # Decode
         z_decode = self.decoder_mlp(z)
         z_decode_rs = torch.reshape(z_decode, (batch_size, 512, 4, 4, 4))
         recon_logits = self.decoder_cnn(z_decode_rs).squeeze(1)
-
         recon = torch.sigmoid(recon_logits)
+
         return xyz, recon_logits, recon
 
     def normalize_keypoints(self, xyz: torch.Tensor, rotation: torch.Tensor, scale: torch.Tensor):
@@ -145,18 +147,18 @@ class KeypointNet(BaseObjectModel):
 
         # Run model forward.
         xyz_1, v_1_recon_logits, v_1_recon = self.forward(voxel_1, rot_1, scale_1)
-        # xyz_2, v_2_recon_logits, v_2_recon = self.forward(voxel_2, rot_2, scale_2)
-        #
-        # # Separation loss.
-        # sep_1 = separation_loss(xyz_1)
-        # sep_2 = separation_loss(xyz_2)
-        # sep_loss = torch.cat([sep_1, sep_2], dim=0).mean()
-        # loss_dict['separation'] = sep_loss
-        #
-        # # Keypoint consistency loss.
-        # norm_xyz_1 = self.normalize_keypoints(xyz_1, rot_1, scale_1)
-        # norm_xyz_2 = self.normalize_keypoints(xyz_2, rot_2, scale_2)
-        # consistency_loss = F.mse_loss(norm_xyz_1, norm_xyz_2)
-        # loss_dict['consistency'] = consistency_loss
+        xyz_2, v_2_recon_logits, v_2_recon = self.forward(voxel_2, rot_2, scale_2)
 
-        return v_1_recon_logits, v_1_recon, loss_dict  # , v_2_recon_logits, v_2_recon, loss_dict
+        # Separation loss.
+        sep_1 = separation_loss(xyz_1)
+        sep_2 = separation_loss(xyz_2)
+        sep_loss = torch.cat([sep_1, sep_2], dim=0).mean()
+        loss_dict['separation'] = sep_loss
+
+        # Keypoint consistency loss.
+        norm_xyz_1 = self.normalize_keypoints(xyz_1, rot_1, scale_1)
+        norm_xyz_2 = self.normalize_keypoints(xyz_2, rot_2, scale_2)
+        consistency_loss = F.mse_loss(norm_xyz_1, norm_xyz_2)
+        loss_dict['consistency'] = consistency_loss
+
+        return v_1_recon_logits, v_1_recon, v_2_recon_logits, v_2_recon, loss_dict
