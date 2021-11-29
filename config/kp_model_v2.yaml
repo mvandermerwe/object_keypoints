@@ -37,9 +37,10 @@ training:
   batch_size: 8
   val_batch_size: 8
   shuffle: true
-  loss_weights:  # TODO: Tune these based on previous runs!
+  loss_weights:
     reconstruction: 1.0
     separation: 0.1
-    consistency: 0.001
+    consistency: 0.01
 model:
   type: keypointnet
+  k: 32

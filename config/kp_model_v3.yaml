@@ -1,12 +1,12 @@
 data:
   dataset: voxel
-  dataset_dir: out/dataset/mug
+  dataset_dir: out/dataset/mug_v2
   transforms:
     - type: scale_pc
       in_key: point_cloud
       out_key: point_cloud_1
       scale_key: scale_1
-    - type: tf_pc
+    - type: z_tf_pc
       in_key: point_cloud_1
       out_key: point_cloud_1
       rot_key: rot_1
@@ -18,7 +18,7 @@ data:
       in_key: point_cloud
       out_key: point_cloud_2
       scale_key: scale_2
-    - type: tf_pc
+    - type: z_tf_pc
       in_key: point_cloud_2
       out_key: point_cloud_2
       rot_key: rot_2
@@ -28,7 +28,7 @@ data:
       voxel_size: 64
 method: object_model
 training:
-  out_dir: out/models/kp_model_v1
+  out_dir: out/models/kp_model_v2
   learning_rate: 0.001
   print_every: 10
   epochs: 10000
@@ -40,7 +40,7 @@ training:
   loss_weights:
     reconstruction: 1.0
     separation: 0.1
-    consistency: 0.001
+    consistency: 0.01
 model:
   type: keypointnet
-  k: 16
+  k: 64

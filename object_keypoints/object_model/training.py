@@ -86,9 +86,9 @@ class Trainer(BaseTrainer):
             self.model.loss_forward(voxel_1, rot_1, scale_1, voxel_2, rot_2, scale_2)
 
         # Calculate reconstruction losses.
-        recon_loss_1 = F.binary_cross_entropy_with_logits(voxel_1_recon_logits, voxel_1, reduction='none').sum(
+        recon_loss_1 = F.binary_cross_entropy_with_logits(voxel_1_recon_logits, voxel_1, reduction='none').mean(
             dim=[1, 2, 3])
-        recon_loss_2 = F.binary_cross_entropy_with_logits(voxel_2_recon_logits, voxel_2, reduction='none').sum(
+        recon_loss_2 = F.binary_cross_entropy_with_logits(voxel_2_recon_logits, voxel_2, reduction='none').mean(
             dim=[1, 2, 3])
         recon_loss = torch.cat([recon_loss_1, recon_loss_2], dim=0).mean()
         loss_dict['reconstruction'] = recon_loss

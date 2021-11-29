@@ -8,7 +8,7 @@ def get_model(cfg, device=None):
     model_type = model_cfg['type']
 
     if model_type == "keypointnet":
-        model = KeypointNet(device=device)
+        model = KeypointNet(k=model_cfg['k'], device=device)
     elif model_type == "cnnnet":
         model = CNNNet(device=device)
     else:
