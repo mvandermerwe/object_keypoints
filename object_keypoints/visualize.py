@@ -26,6 +26,9 @@ def visualize_points(points: np.ndarray, axes: plt.Axes = None, show=True):
     axes.set_xlim3d(left=-1.0, right=1.0)
     axes.set_ylim3d(bottom=-1.0, top=1.0)
     axes.set_zlim3d(bottom=-1.0, top=1.0)
+    axes.set_xlabel("x")
+    axes.set_ylabel("y")
+    axes.set_zlabel("z")
 
     if show:
         plt.show()

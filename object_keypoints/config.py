@@ -70,6 +70,8 @@ def get_transforms(cfg):
             tf = data.PointCloudToVoxel(tf_info['in_key'], tf_info['out_key'], tf_info['voxel_size'])
         elif tf_type == "tf_pc":
             tf = data.RandomTransformPointCloud(tf_info['in_key'], tf_info['out_key'], tf_info['rot_key'])
+        elif tf_type == "z_tf_pc":
+            tf = data.ZTransformPointCloud(tf_info['in_key'], tf_info['out_key'], tf_info['rot_key'])
         elif tf_type == "scale_pc":
             tf = data.ScalePointCloud(tf_info['in_key'], tf_info['out_key'], tf_info['scale_key'])
         else:

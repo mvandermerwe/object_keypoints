@@ -25,7 +25,7 @@ class PointCloudToVoxel(object):
         # new_data[self.out_key] = new_voxel
 
         new_voxel_2 = np.zeros([self.voxel_size, self.voxel_size, self.voxel_size], dtype=bool)
-        voxel_locs = np.clip(voxel_locs, a_min=0, a_max=self.voxel_size-1)
+        voxel_locs = np.clip(voxel_locs, a_min=0, a_max=self.voxel_size - 1)
         new_voxel_2[(voxel_locs[:, 0], voxel_locs[:, 1], voxel_locs[:, 2])] = True
         data[self.out_key] = new_voxel_2
 
@@ -43,6 +43,26 @@ class RandomTransformPointCloud(object):
         # Build random transform.
         random_euler = -np.pi + (2.0 * np.pi * np.random.random(3))
         rot = tf3d.euler.euler2mat(random_euler[0], random_euler[1], random_euler[2])
+
+        # Apply to point cloud.
+        pc = data[self.in_key]
+        new_pc = rot @ pc.T
+
+        data[self.rot_key] = rot
+        data[self.out_key] = new_pc.T
+        return data
+
+
+class ZTransformPointCloud(object):
+
+    def __init__(self, in_key: str, out_key: str, rot_key: str):
+        self.in_key = in_key
+        self.out_key = out_key
+        self.rot_key = rot_key
+
+    def __call__(self, data):
+        rand_z_rot = -np.pi + (2.0 * np.pi * np.random.random())
+        rot = tf3d.euler.euler2mat(0.0, 0.0, rand_z_rot)
 
         # Apply to point cloud.
         pc = data[self.in_key]

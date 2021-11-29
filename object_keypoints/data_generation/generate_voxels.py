@@ -38,13 +38,13 @@ def center_pc(pc: np.ndarray):
     return pc
 
 
-
 def pc_to_voxels(pc: np.ndarray, voxel_size: int):
     """
     Downsample to specified voxel size.
     """
     voxel_length = 2.0 / voxel_size
     voxel_locs = (pc / voxel_length).astype(int) + (voxel_size // 2)
+    voxel_locs = np.clip(voxel_locs, a_min=0, a_max=63)
 
     new_voxel = np.zeros([voxel_size, voxel_size, voxel_size], dtype=bool)
     for voxel_loc in voxel_locs:

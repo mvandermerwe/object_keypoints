@@ -28,12 +28,14 @@ if __name__ == '__main__':
             _, _, voxel_1_recon = model.forward(voxel_1, rot_1, scale_1)
 
         err_min = np.inf
-        best_threshold = -1
+        best_threshold = -1.0
         for threshold in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]:
             err = F.binary_cross_entropy((voxel_1_recon > threshold).float(), voxel_1)
             if err < err_min:
                 best_threshold = threshold
                 err_min = err
+
+        print("Using threshold: %f" % best_threshold)
         voxel_1_recon = voxel_1_recon > best_threshold
 
         fig = plt.figure()
