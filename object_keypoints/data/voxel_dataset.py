@@ -30,10 +30,13 @@ class VoxelDataset(torch.utils.data.Dataset):
             self.point_clouds.append(np.load(os.path.join(self.dataset_dir, pc_file)))
 
     def __len__(self):
-        return len(self.point_clouds)
+        # WARNING: HACKS GALORE
+        return 10000 * len(self.point_clouds)
 
     def __getitem__(self, idx):
         data = {}
+        # WARNING: HACKS GALORE
+        idx = 0
 
         # Load untransformed point cloud.
         point_cloud = self.point_clouds[idx]
