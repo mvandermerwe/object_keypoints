@@ -28,7 +28,7 @@ data:
       voxel_size: 64
 method: object_model
 training:
-  out_dir: out/models/kp_model_v2
+  out_dir: out/models/kp_model_v3
   learning_rate: 0.001
   print_every: 10
   epochs: 10000
