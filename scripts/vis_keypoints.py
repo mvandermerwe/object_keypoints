@@ -1,14 +1,14 @@
 import argparse
-import pdb
-
 import numpy as np
 import torch.utils.data.dataloader
 from matplotlib import pyplot as plt
 from matplotlib.gridspec import GridSpec
 from object_keypoints.model_utils import load_model_and_dataset
+from object_keypoints.object_model.models.keypointnet import KeypointNet
 from object_keypoints.object_model.training import get_data_from_batch
-import torch.nn.functional as F
 import object_keypoints.visualize as vis
+from object_keypoints.data_generation.generate_voxels import voxels_to_pc
+from object_keypoints.data_generation.generate_voxels_v2 import downsample_visualize
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Visualize reconstruction.")
@@ -16,8 +16,11 @@ if __name__ == '__main__':
     parser.add_argument("--mode", "-m", type=str, default="val", help="Which split to vis [train, val, test].")
     args = parser.parse_args()
 
+    model: KeypointNet
     model_cfg, model, dataset, device = load_model_and_dataset(args.config, dataset_mode=args.mode)
     model.eval()
+
+    colors = np.random.rand(model.k, 3)
 
     dataloader = torch.utils.data.dataloader.DataLoader(dataset, batch_size=1, shuffle=True)
 
@@ -25,23 +28,29 @@ if __name__ == '__main__':
         voxel_1, rot_1, scale_1, voxel_2, rot_2, scale_2 = get_data_from_batch(batch, device)
 
         with torch.no_grad():
-            _, _, voxel_1_recon = model.forward(voxel_1, rot_1, scale_1)
+            keypoints, _, voxel_1_recon = model.forward(voxel_1, rot_1, scale_1)
 
-        err_min = np.inf
-        best_threshold = 0.2  # -1.0
-        # for threshold in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]:
-        #     err = F.binary_cross_entropy((voxel_1_recon > threshold).float(), voxel_1)
-        #     if err < err_min:
-        #         best_threshold = threshold
-        #         err_min = err
-
-        print("Using threshold: %f" % best_threshold)
+        best_threshold = 0.5
         voxel_1_recon = voxel_1_recon > best_threshold
 
         fig = plt.figure()
-        grid_spec = GridSpec(1, 2, figure=fig)
+        grid_spec = GridSpec(1, 3, figure=fig)
         ax_1 = fig.add_subplot(grid_spec[0, 0], projection='3d')
         ax_2 = fig.add_subplot(grid_spec[0, 1], projection='3d')
-        vis.visualize_voxels(voxel_1.cpu().numpy()[0], axes=ax_1, show=False)
-        vis.visualize_voxels(voxel_1_recon.cpu().numpy()[0], axes=ax_2, show=False)
+        ax_3 = fig.add_subplot(grid_spec[0, 2], projection='3d')
+
+        gt_pc = voxels_to_pc(voxel_1.cpu().numpy()[0])
+        gt_pc = gt_pc[np.random.choice(gt_pc.shape[0], size=1024)]
+        vis.visualize_points(gt_pc, axes=ax_1, show=False)
+
+        pred_pc = voxels_to_pc(voxel_1_recon.cpu().numpy()[0])
+        pred_pc = pred_pc[np.random.choice(pred_pc.shape[0], size=1024)]
+        vis.visualize_points(pred_pc, axes=ax_2, show=False)
+
+        keypoints = keypoints.cpu().numpy()[0]
+        ax_3.scatter(keypoints[:, 0], keypoints[:, 1], keypoints[:, 2], c=colors)
+        ax_3.set_xlim3d(left=0, right=model.heatmap_size)
+        ax_3.set_ylim3d(bottom=0, top=model.heatmap_size)
+        ax_3.set_zlim3d(bottom=0, top=model.heatmap_size)
+
         plt.show()

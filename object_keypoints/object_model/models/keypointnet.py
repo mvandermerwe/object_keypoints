@@ -116,6 +116,9 @@ class KeypointNet(BaseObjectModel):
         xyz = self.heatmap_to_xyz(heatmap)
         xyz = xyz.reshape(batch_size, self.k, 3)
 
+        # Convert points to range of [-1, 1].
+        xyz = ((xyz / self.heatmap_size) * 2.0) - 1.0
+
         return xyz
 
     def forward(self, voxel, rot, scale):
@@ -134,8 +137,14 @@ class KeypointNet(BaseObjectModel):
         return xyz, recon_logits, recon
 
     def normalize_keypoints(self, xyz: torch.Tensor, rotation: torch.Tensor, scale: torch.Tensor):
+        """
+        We assume keypoints are in correct framing and scale, etc.
+        """
+        # Undo the rotation.
         rot_undo = torch.transpose(rotation, 1, 2)
         norm_xyz = (rot_undo @ xyz.transpose(1, 2)).transpose(1, 2)
+
+        # Undo the scaling.
         norm_xyz[:, :, 0] /= scale[:, None, 0]
         norm_xyz[:, :, 1] /= scale[:, None, 1]
         norm_xyz[:, :, 2] /= scale[:, None, 2]

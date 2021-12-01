@@ -20,6 +20,7 @@ class ModelTester(unittest.TestCase):
         default_model_config = {
             "model": {
                 "type": "keypointnet",
+                "k": 32,
             },
         }
         self.model: KeypointNet = config.get_model(default_model_config, device=self.device)
