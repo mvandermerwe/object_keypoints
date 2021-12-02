@@ -121,6 +121,16 @@ class KeypointNet(BaseObjectModel):
 
         return xyz
 
+    def decode(self, z):
+        batch_size = z.shape[0]
+
+        z_decode = self.decoder_mlp(z)
+        z_decode_rs = torch.reshape(z_decode, (batch_size, 512, 4, 4, 4))
+        recon_logits = self.decoder_cnn(z_decode_rs).squeeze(1)
+        recon = torch.sigmoid(recon_logits)
+
+        return recon_logits, recon
+
     def forward(self, voxel, rot, scale):
         batch_size = voxel.shape[0]
 
@@ -129,10 +139,7 @@ class KeypointNet(BaseObjectModel):
         z = torch.reshape(xyz, (batch_size, self.k * 3))
 
         # Decode
-        z_decode = self.decoder_mlp(z)
-        z_decode_rs = torch.reshape(z_decode, (batch_size, 512, 4, 4, 4))
-        recon_logits = self.decoder_cnn(z_decode_rs).squeeze(1)
-        recon = torch.sigmoid(recon_logits)
+        recon_logits, recon = self.decode(z)
 
         return xyz, recon_logits, recon
 

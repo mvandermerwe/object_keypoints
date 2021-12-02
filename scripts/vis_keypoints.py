@@ -49,8 +49,8 @@ if __name__ == '__main__':
 
         keypoints = keypoints.cpu().numpy()[0]
         ax_3.scatter(keypoints[:, 0], keypoints[:, 1], keypoints[:, 2], c=colors)
-        ax_3.set_xlim3d(left=0, right=model.heatmap_size)
-        ax_3.set_ylim3d(bottom=0, top=model.heatmap_size)
-        ax_3.set_zlim3d(bottom=0, top=model.heatmap_size)
+        ax_3.set_xlim3d(left=-1.0, right=1.0)
+        ax_3.set_ylim3d(bottom=-1.0, top=1.0)
+        ax_3.set_zlim3d(bottom=-1.0, top=1.0)
 
         plt.show()
