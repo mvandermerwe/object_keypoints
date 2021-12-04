@@ -39,7 +39,7 @@ def get_trainer(model, optimizer, cfg, logger, vis_dir, device=None):
     return trainer
 
 
-def get_dataset(mode, cfg, batch_size=16):
+def get_dataset(mode, cfg):
     """
     Args:
     - mode (str): dataset mode [train, val, test].
@@ -50,7 +50,7 @@ def get_dataset(mode, cfg, batch_size=16):
     transforms_ = get_transforms(cfg)
 
     if dataset_type == "voxel":
-        dataset = data.VoxelDataset(cfg['data']['dataset_dir'], split=mode, batch_size=batch_size,
+        dataset = data.VoxelDataset(cfg['data']['dataset_dir'], split=mode, dataset_len=cfg['data']['dataset_len'],
                                     transform=transforms_)
     else:
         raise Exception("Unknown dataset type: %s." % dataset_type)

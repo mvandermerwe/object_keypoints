@@ -18,13 +18,13 @@ def load_split(split_file):
 
 class VoxelDataset(torch.utils.data.Dataset):
 
-    def __init__(self, dataset_dir: str, voxel_size: int = 64, split: str = 'train', batch_size: int = 16,
+    def __init__(self, dataset_dir: str, voxel_size: int = 64, split: str = 'train', dataset_len: int = None,
                  transform=None):
         super().__init__()
         self.dataset_dir = dataset_dir
         self.transform = transform
         self.voxel_size = voxel_size
-        self.batch_size = batch_size
+        self.dataset_len = dataset_len
 
         # Load split info (i.e., which points in dataset are for training).
         splits = load_split(os.path.join(self.dataset_dir, 'splits', split + '.txt'))
@@ -35,13 +35,13 @@ class VoxelDataset(torch.utils.data.Dataset):
             self.point_clouds.append(np.load(os.path.join(self.dataset_dir, pc_file)))
 
     def __len__(self):
-        if len(self.point_clouds) < self.batch_size:
-            return self.batch_size
-        else:
+        if self.dataset_len is None:
             return len(self.point_clouds)
+        else:
+            return self.dataset_len
 
     def __getitem__(self, idx):
-        if len(self.point_clouds) < self.batch_size:
+        if self.dataset_len is not None:
             idx = idx % len(self.point_clouds)
 
         # Load untransformed point cloud.
