@@ -4,7 +4,7 @@ data:
   dataset_len: 4000
 method: object_model
 training:
-  out_dir: out/models/rotation/kp_model_v1
+  out_dir: out/models/rotation/kp_model_v2
   learning_rate: 0.001
   print_every: 10
   epochs: 10000
@@ -16,7 +16,7 @@ training:
   loss_weights:
     reconstruction: 1.0
     separation: 0.1
-    consistency: 0.01
+    consistency: 0.1
 model:
   type: keypointnet
   k: 32
