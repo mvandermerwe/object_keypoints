@@ -39,7 +39,7 @@ def get_trainer(model, optimizer, cfg, logger, vis_dir, device=None):
     return trainer
 
 
-def get_dataset(mode, cfg):
+def get_dataset(mode, cfg, batch_size=16):
     """
     Args:
     - mode (str): dataset mode [train, val, test].
@@ -50,7 +50,8 @@ def get_dataset(mode, cfg):
     transforms_ = get_transforms(cfg)
 
     if dataset_type == "voxel":
-        dataset = data.VoxelDataset(cfg['data']['dataset_dir'], mode, transforms_)
+        dataset = data.VoxelDataset(cfg['data']['dataset_dir'], split=mode, batch_size=batch_size,
+                                    transform=transforms_)
     else:
         raise Exception("Unknown dataset type: %s." % dataset_type)
 
@@ -66,17 +67,7 @@ def get_transforms(cfg):
 
     for tf_info in transforms_info:
         tf_type = tf_info["type"]
-        if tf_type == "pc_to_voxel":
-            tf = data.PointCloudToVoxel(tf_info['in_key'], tf_info['out_key'], tf_info['voxel_size'])
-        elif tf_type == "tf_pc":
-            tf = data.RandomTransformPointCloud(tf_info['in_key'], tf_info['out_key'], tf_info['rot_key'])
-        elif tf_type == "z_tf_pc":
-            tf = data.ZTransformPointCloud(tf_info['in_key'], tf_info['out_key'], tf_info['rot_key'])
-        elif tf_type == "scale_pc":
-            tf = data.ScalePointCloud(tf_info['in_key'], tf_info['out_key'], tf_info['scale_key'])
-        else:
-            raise Exception("Unknown transform type: %s" % tf_type)
-        transform_list.append(tf)
+        raise Exception("Unknown transform type: %s" % tf_type)
 
     composed = transforms.Compose(transform_list)
     return composed

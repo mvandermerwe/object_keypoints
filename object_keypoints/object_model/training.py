@@ -4,7 +4,6 @@ from collections import defaultdict
 import torch
 from object_keypoints.training import BaseTrainer
 from object_keypoints.object_model.models.base_object_model import BaseObjectModel
-import object_keypoints.visualize as vis
 import torch.nn.functional as F
 from tqdm import tqdm
 

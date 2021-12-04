@@ -16,9 +16,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Visualize reconstruction.")
     parser.add_argument("config", type=str, help="Model/data config file.")
     parser.add_argument("--mode", "-m", type=str, default="val", help="Which split to vis [train, val, test].")
+    parser.add_argument("--model_file", "-f", type=str, default="model_best.pt", help="Which model save file to use.")
     args = parser.parse_args()
 
-    model_cfg, model, dataset, device = load_model_and_dataset(args.config, dataset_mode=args.mode)
+    model_cfg, model, dataset, device = load_model_and_dataset(args.config, dataset_mode=args.mode,
+                                                               model_file=args.model_file)
     model.eval()
 
     colors = np.random.rand(model.k, 3)
