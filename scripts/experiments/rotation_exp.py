@@ -36,6 +36,9 @@ if __name__ == '__main__':
     # Grab a point cloud model from the dataset.
     base_point_cloud = dataset.point_clouds[0]
 
+    # Rotate 180 degrees for easier handle viewing.
+    base_point_cloud, _ = rotate_point_cloud(base_point_cloud, [0.0, 0.0, np.pi])
+
     # Encode the base configuration.
     base_voxel = point_cloud_to_voxel(base_point_cloud, 64).astype(np.float32)
     base_voxel = torch.from_numpy(base_voxel).unsqueeze(0).to(device)
