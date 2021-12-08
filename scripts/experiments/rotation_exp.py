@@ -25,6 +25,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Run reconstruction experiment.")
     parser.add_argument("config", type=str, help="Model/data config file.")
     parser.add_argument("dataset_config", type=str, help="Dataset config file.")
+    parser.add_argument("--out", default=None, type=str, help="Path to write video to.")
     parser.add_argument("--mode", "-m", type=str, default="val", help="Which split to vis [train, val, test].")
     parser.add_argument("--model_file", "-f", type=str, default="model_best.pt", help="Which model save file to use.")
     args = parser.parse_args()
@@ -34,6 +35,8 @@ if __name__ == '__main__':
     model_cfg, model, dataset, device = load_model_and_dataset(args.config, dataset_config=args.dataset_config,
                                                                dataset_mode=args.mode, model_file=args.model_file)
     model.eval()
+
+    video_out_file = args.out
 
     # Grab a point cloud model from the dataset.
     base_point_cloud = dataset.point_clouds[0]
@@ -66,9 +69,13 @@ if __name__ == '__main__':
 
     plt = vedo.Plotter(N=2)
     gt_voxel_volume = vedo.Volume(base_voxel.cpu().numpy()[0])
-    gt_voxel_volume.color('b')
-    plt.show(gt_voxel_volume, at=0, interactive=True)
-    plt.clear(gt_voxel_volume)
+    gt_lego = gt_voxel_volume.legosurface(vmin=0.5)
+    gt_lego.color('b')
+    plt.show(gt_lego, at=0, interactive=True)
+    plt.clear(gt_lego)
+
+    if video_out_file is not None:
+        video = vedo.Video(video_out_file)
 
     for z_angle, alpha in zip(z_angles, alphas):
         # Generate GT voxels.
@@ -98,15 +105,19 @@ if __name__ == '__main__':
         # vis.visualize_voxels(voxel_recon.cpu().numpy()[0], axes=ax_2, show=False)
         # plt.show()
 
-        gt_voxel_volume = vedo.Volume(rotated_voxel.cpu().numpy()[0])
+        gt_voxel_volume = vedo.Volume(rotated_voxel.cpu().numpy()[0]).legosurface(vmin=0.5)
         gt_voxel_volume.color('b')
 
-        pred_voxel_volume = vedo.Volume(voxel_recon.cpu().numpy()[0])
+        pred_voxel_volume = vedo.Volume(voxel_recon.cpu().numpy()[0]).legosurface(vmin=0.5)
         pred_voxel_volume.color('b')
 
         plt.show(gt_voxel_volume, at=0, interactive=False)
         plt.show(pred_voxel_volume, at=1, interactive=False)
-        time.sleep(0.1)
+        if video_out_file is not None:
+            video.addFrame()
         plt.clear([gt_voxel_volume, pred_voxel_volume])
+
+    if video_out_file is not None:
+        video.close()
 
     # TODO: Plot results.
