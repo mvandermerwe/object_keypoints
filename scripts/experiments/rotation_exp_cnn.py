@@ -8,6 +8,7 @@ from matplotlib import pyplot as plt
 from matplotlib.gridspec import GridSpec
 from object_keypoints.data import VoxelDataset
 from object_keypoints.model_utils import load_model_and_dataset
+from object_keypoints.object_model.models.cnn_net import CNNNet
 from object_keypoints.object_model.models.keypointnet import KeypointNet
 from torch.utils.data.dataloader import DataLoader
 from object_keypoints.object_model.training import get_data_from_batch
@@ -30,7 +31,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     dataset: VoxelDataset
-    model: KeypointNet
+    model: CNNNet
     model_cfg, model, dataset, device = load_model_and_dataset(args.config, dataset_config=args.dataset_config,
                                                                dataset_mode=args.mode, model_file=args.model_file)
     model.eval()
@@ -48,15 +49,15 @@ if __name__ == '__main__':
     base_voxel = point_cloud_to_voxel(base_point_cloud, 64).astype(np.float32)
     base_voxel = torch.from_numpy(base_voxel).unsqueeze(0).to(device)
     with torch.no_grad():
-        keypoints_base, _, _ = model.forward(base_voxel, None, None)
-    keypoints_base_np = keypoints_base[0].cpu().numpy()
+        latent_base, _, _ = model.forward(base_voxel, None, None)
+    latent_base_np = latent_base[0].cpu().numpy()
 
     # Encode the goal configuration.
     goal_voxel = point_cloud_to_voxel(goal_point_cloud, 64).astype(np.float32)
     goal_voxel = torch.from_numpy(goal_voxel).unsqueeze(0).to(device)
     with torch.no_grad():
-        keypoints_goal, _, _ = model.forward(goal_voxel, None, None)
-    keypoints_goal_np = keypoints_goal[0].cpu().numpy()
+        latent_goal, _, _ = model.forward(goal_voxel, None, None)
+    latent_goal_np = latent_goal[0].cpu().numpy()
 
     # Measure BCE/IoU.
     bce = []
@@ -77,12 +78,10 @@ if __name__ == '__main__':
         rotated_voxel = torch.from_numpy(rotated_voxel).unsqueeze(0).to(device)
 
         # Rotate keypoints to get new latent space.
-        rotated_base_kp, _ = rotate_point_cloud(keypoints_base_np, [0.0, 0.0, z_angle])
-        rotated_goal_kp, _ = rotate_point_cloud(keypoints_goal_np, [0.0, 0.0, -(np.pi/2.0 - z_angle)])
-        rotated_kp = ((1 - alpha) * rotated_base_kp) + (alpha * rotated_goal_kp)
-        rotated_z = torch.from_numpy(rotated_kp.astype(np.float32)).reshape(1, model.k * 3).to(device)
+        new_latent = ((1 - alpha) * latent_base_np) + (alpha * latent_goal_np)
+        new_latent = torch.from_numpy(new_latent.astype(np.float32)).reshape(1, -1).to(device)
         with torch.no_grad():
-            _, voxel_recon = model.decode(rotated_z)
+            _, voxel_recon = model.decode(new_latent)
 
         # Evaluate quality of reconstruction.
         bce.append(F.binary_cross_entropy(voxel_recon, rotated_voxel, reduction='mean').item())
