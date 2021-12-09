@@ -2,6 +2,7 @@ import argparse
 import pdb
 import time
 
+import mmint_utils
 import numpy as np
 import torch
 from matplotlib import pyplot as plt
@@ -11,7 +12,7 @@ from object_keypoints.model_utils import load_model_and_dataset
 from object_keypoints.object_model.models.keypointnet import KeypointNet
 from torch.utils.data.dataloader import DataLoader
 from object_keypoints.object_model.training import get_data_from_batch
-from object_keypoints.metrics import iou_metric
+from object_keypoints.metrics import iou_metric, chamfer_distance_metric
 import torch.nn.functional as F
 from object_keypoints.data.transforms import point_cloud_to_voxel, rotate_point_cloud
 import object_keypoints.visualize as vis
@@ -28,7 +29,10 @@ if __name__ == '__main__':
     parser.add_argument("--out", default=None, type=str, help="Path to write video to.")
     parser.add_argument("--mode", "-m", type=str, default="val", help="Which split to vis [train, val, test].")
     parser.add_argument("--model_file", "-f", type=str, default="model_best.pt", help="Which model save file to use.")
+    parser.add_argument('--no_vis', dest='no_vis', action='store_true', help='Add flag to not visualize.')
+    parser.set_defaults(no_vis=False)
     args = parser.parse_args()
+    no_vis = args.no_vis
 
     dataset: VoxelDataset
     model: KeypointNet
@@ -54,21 +58,25 @@ if __name__ == '__main__':
         keypoints_base, _, _ = model.forward(base_voxel, None, None)
     keypoints_base_np = keypoints_base[0].cpu().numpy()
 
-    # Measure BCE/IoU.
+    # Measure BCE/IoU/Chamfer.
     bce = []
     iou = []
+    chamfer = []
+
+    # Test angles.
     z_angles = np.arange(0.0, np.pi / 2.0, (np.pi / 2.0) / 200)
     alphas = np.arange(0.0, 1.0, 1.0 / 200)
 
-    plt = vedo.Plotter(N=2)
-    gt_voxel_volume = vedo.Volume(base_voxel.cpu().numpy()[0])
-    gt_lego = gt_voxel_volume.legosurface(vmin=0.5)
-    gt_lego.color('b')
-    plt.show(gt_lego, at=0, interactive=True)
-    plt.clear(gt_lego)
+    if not no_vis:
+        plt = vedo.Plotter(N=2)
+        gt_voxel_volume = vedo.Volume(base_voxel.cpu().numpy()[0])
+        gt_lego = gt_voxel_volume.legosurface(vmin=0.5)
+        gt_lego.color('b')
+        plt.show(gt_lego, at=0, interactive=True)
+        plt.clear(gt_lego)
 
-    if video_out_file is not None:
-        video = vedo.Video(video_out_file)
+        if video_out_file is not None:
+            video = vedo.Video(video_out_file)
 
     for z_angle, alpha in zip(z_angles, alphas):
         # Generate GT voxels.
@@ -85,6 +93,7 @@ if __name__ == '__main__':
         # Evaluate quality of reconstruction.
         bce.append(F.binary_cross_entropy(voxel_recon, rotated_voxel, reduction='mean').item())
         iou.append(iou_metric(voxel_recon, rotated_voxel).item())
+        chamfer.append(chamfer_distance_metric(voxel_recon, rotated_voxel).item())
 
         voxel_recon = voxel_recon > 0.5
 
@@ -96,23 +105,30 @@ if __name__ == '__main__':
         # vis.visualize_voxels(voxel_recon.cpu().numpy()[0], axes=ax_2, show=False)
         # plt.show()
 
-        gt_voxel_volume = vedo.Volume(rotated_voxel.cpu().numpy()[0]).legosurface(vmin=0.5)
-        gt_voxel_volume.color('b')
+        if not no_vis:
+            gt_voxel_volume = vedo.Volume(rotated_voxel.cpu().numpy()[0]).legosurface(vmin=0.5)
+            gt_voxel_volume.color('b')
 
-        vis_points = (rotated_kp.astype(np.float32) * 32) + 32
-        vis_points_volume = vedo.Points(vis_points)
+            # vis_points = (rotated_kp.astype(np.float32) * 32) + 32
+            # vis_points_volume = vedo.Points(vis_points)
 
-        pred_voxel_volume = vedo.Volume(voxel_recon.cpu().numpy()[0]).legosurface(vmin=0.5)
-        pred_voxel_volume.color('b')
+            pred_voxel_volume = vedo.Volume(voxel_recon.cpu().numpy()[0]).legosurface(vmin=0.5)
+            pred_voxel_volume.color('b')
 
-        plt.show(gt_voxel_volume, at=0, interactive=False)
-        # plt.show(vis_points_volume, at=1, interactive=False)
-        plt.show(pred_voxel_volume, at=1, interactive=False)
-        if video_out_file is not None:
-            video.addFrame()
-        plt.clear([gt_voxel_volume, pred_voxel_volume])
+            plt.show(gt_voxel_volume, at=0, interactive=False)
+            # plt.show(vis_points_volume, at=1, interactive=False)
+            plt.show(pred_voxel_volume, at=1, interactive=False)
+            if video_out_file is not None:
+                video.addFrame()
+            plt.clear([gt_voxel_volume, pred_voxel_volume])
 
     if video_out_file is not None:
         video.close()
 
-    # TODO: Plot results.
+    out_file = "out/results/kp_res.pkl.gzip"
+    data = {
+        'bce': bce,
+        'iou': iou,
+        'chamfer': chamfer,
+    }
+    mmint_utils.save_gzip_pickle(data, out_file)
