@@ -1,10 +1,13 @@
 import argparse
+import pdb
+
 import numpy as np
 import torch
+import tqdm
 from object_keypoints.model_utils import load_model_and_dataset
 from torch.utils.data.dataloader import DataLoader
 from object_keypoints.object_model.training import get_data_from_batch
-from object_keypoints.metrics import iou_metric
+from object_keypoints.metrics import iou_metric, chamfer_distance_metric
 import torch.nn.functional as F
 
 #######################################################################
@@ -25,11 +28,12 @@ if __name__ == '__main__':
 
     dataloader = DataLoader(dataset, batch_size=8, shuffle=False)
 
-    # Evaluate BCE and IoU.
+    # Evaluate BCE, IoU, and Chamfer.
     bce = []
     iou = []
+    chamfer = []
 
-    for batch in dataloader:
+    for batch in tqdm.tqdm(dataloader):
         voxel_1, rot_1, scale_1, _, _, _ = get_data_from_batch(batch, device)
 
         with torch.no_grad():
@@ -41,15 +45,23 @@ if __name__ == '__main__':
         # Evaluate bce.
         bce_example = F.binary_cross_entropy(voxel_1_recon, voxel_1, reduction='none').mean(dim=[1, 2, 3])
 
+        # Evaluate chamfer.
+        chamfer_example = chamfer_distance_metric(voxel_1_recon, voxel_1, reduce=False)
+
         bce.append(bce_example)
         iou.append(iou_example)
+        chamfer.append(chamfer_example)
     bce = torch.cat(bce).cpu().numpy()
     iou = torch.cat(iou).cpu().numpy()
+    chamfer = np.concatenate(chamfer, axis=0)
 
     # Get statistics from result.
     bce_avg = np.mean(bce).item()
     bce_std = np.std(bce).item()
     iou_avg = np.mean(iou).item()
     iou_std = np.std(iou).item()
+    chamfer_avg = np.mean(chamfer).item()
+    chamfer_std = np.std(chamfer).item()
 
-    print("BCE: %f (%f), IoU: %f (%f)" % (bce_avg, bce_std, iou_avg, iou_std))
+    print(
+        "BCE: %f (%f), IoU: %f (%f), Chamfer: %f (%f)" % (bce_avg, bce_std, iou_avg, iou_std, chamfer_avg, chamfer_std))

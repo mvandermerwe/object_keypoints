@@ -1,8 +1,22 @@
 import numpy as np
 import os
 import binvox_rw.binvox_helpers as binvox_rw
+import torch
 import trimesh
 from tqdm import tqdm
+
+
+def voxels_to_pc_torch(voxels: torch.Tensor):
+    """
+    Maps voxels to -1, 1 pc space in each dim.
+    """
+    voxel_shape = voxels.shape
+    voxel_size = max(voxel_shape)
+
+    voxels_sparse = torch.nonzero(voxels)
+    pc = ((voxels_sparse / voxel_size) * 2.0) - 1.0
+
+    return pc
 
 
 def voxels_to_pc(voxels: np.ndarray):

@@ -1,0 +1,4 @@
+data:
+  dataset: voxel
+  dataset_dir: out/dataset/mug_v2
+  dataset_len: 500
