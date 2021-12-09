@@ -54,11 +54,18 @@ if __name__ == '__main__':
         keypoints_base, _, _ = model.forward(base_voxel, None, None)
     keypoints_base_np = keypoints_base[0].cpu().numpy()
 
+    # Encode the goal configuration.
+    goal_voxel = point_cloud_to_voxel(goal_point_cloud, 64).astype(np.float32)
+    goal_voxel = torch.from_numpy(goal_voxel).unsqueeze(0).to(device)
+    with torch.no_grad():
+        keypoints_goal, _, _ = model.forward(goal_voxel, None, None)
+    keypoints_goal_np = keypoints_goal[0].cpu().numpy()
+
     # Measure BCE/IoU.
     bce = []
     iou = []
-    z_angles = np.arange(0.0, np.pi / 2.0, (np.pi / 2.0) / 200)
-    alphas = np.arange(0.0, 1.0, 1.0 / 200)
+    z_angles = np.arange(0.0, np.pi / 2.0, (np.pi / 2.0) / 3)
+    alphas = np.arange(0.0, 1.0, 1.0 / 3)
 
     plt = vedo.Plotter(N=2)
     gt_voxel_volume = vedo.Volume(base_voxel.cpu().numpy()[0])
@@ -77,7 +84,9 @@ if __name__ == '__main__':
         rotated_voxel = torch.from_numpy(rotated_voxel).unsqueeze(0).to(device)
 
         # Rotate keypoints to get new latent space.
-        rotated_kp, _ = rotate_point_cloud(keypoints_base_np, [0.0, 0.0, z_angle])
+        rotated_base_kp, _ = rotate_point_cloud(keypoints_base_np, [0.0, 0.0, z_angle])
+        rotated_goal_kp, _ = rotate_point_cloud(keypoints_goal_np, [0.0, 0.0, -(np.pi/2.0 - z_angle)])
+        rotated_kp = ((1 - alpha) * rotated_base_kp) + (alpha * rotated_goal_kp)
         rotated_z = torch.from_numpy(rotated_kp.astype(np.float32)).reshape(1, model.k * 3).to(device)
         with torch.no_grad():
             _, voxel_recon = model.decode(rotated_z)
